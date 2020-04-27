@@ -8,6 +8,16 @@ private:
     bool opened;
     bool closed;
 
+    // an enumeration of value types
+    int type;
+
+    union value {
+	std::string string;
+	char	    character;
+	int	    integer;
+    }
+
+	
 public:
     _node() {
 	std::cout << "node->() :: creation of new node\n";
@@ -28,9 +38,7 @@ public:
     }
 
     struct _node* pop() {
-	_node* parent = NULL;
-	if (prev != NULL)
-	    parent = prev;
+	_node* parent = prev;
 	delete(this);
 
 	return(parent);
@@ -55,5 +63,26 @@ public:
 	this->opened = false;
 	this->closed = true;
     }
+
+    // I'm hoping to replace this (o h t) token with the result of
+    // its operation. not sure how to properly do that. especially
+    // with unknown / variable types.
+    void eval() {
+	prev->result(this) = this->oper(head, tail);
+    }
+
+    
+    // i think this needs to return the address of "head" or "tail"
+    // i think this needs an operator= override ..
+    node* result(node* caller) {
+	if (head == caller) {
+	    return(&node)
+	}
+
+	else if (tail == caller) {
+	    return(&node)
+	}
+    }
+
 } node;
 
