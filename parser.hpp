@@ -2,7 +2,8 @@
 
 #include "token.hpp"
 
-auto& ch_filter = std::use_facet<std::ctype<char>>(std::locale());
+// for prototyping, assume C. should probably pull in from ENV
+std::locale filter("C");
 
 size_t cull(std::string tupin, size_t idx, std::string* op) {
     size_t len = 0;
@@ -24,7 +25,7 @@ size_t cull(std::string tupin, size_t idx, std::string* op) {
 int parse(std::string tupin) {
     size_t idx = 0;
     size_t tks = 0;
-    unsigned char ch = '\0';	// holder value rather than empty string.
+    char ch = '\0';	// temp value rather than empty string.
 
     // for each call, generate a new expression
     node* expr = NULL;
@@ -66,14 +67,19 @@ int parse(std::string tupin) {
 		break;
 
 	    default:
+		if (expr == NULL) {
+		    std::cout << "parsing error, identifier encountered before open expression\n";
+		    return (-3);
+		}
+
 		// strings, numbers, and other bindings are tokens.
-		if (ch_filter.is(std::ctype_base::punct, ch)) {
+		if (std::ispunct(ch, filter)) {
 		    std::cout << "LITHP :: parse --> operator\n";
 
 		    tks++;
 		}
 
-		else if (ch_filter.is(std::ctype_base::alnum, ch)) {
+		else if (std::isalnum(ch, filter)) {
 		    std::cout << "LITHP :: parse --> token\n";
 		    std::string op;
 
