@@ -25,8 +25,8 @@ bool knownop(const char op) {
     }
 }
 
-
-std::size_t cull(std::string tupin, std::size_t idx, std::string* tok) {
+// I want to change the return of cull() to the discovered token type.
+void cull(std::string tupin, std::size_t idx, std::string* tok) {
     std::size_t len = 0;
 
     // force set and check the first character.
@@ -36,7 +36,7 @@ std::size_t cull(std::string tupin, std::size_t idx, std::string* tok) {
     std::cout << "LITHP :: culling --> ";
     while(isalnum(ch)) {
 
-	// only check isdigit() if we're already though to be a number
+	// only check isdigit() if we're already thought to be a number
 	if (pureint && !isdigit(ch))
 	    pureint = false;
 
@@ -47,7 +47,7 @@ std::size_t cull(std::string tupin, std::size_t idx, std::string* tok) {
 
     *tok = tupin.substr(idx, len);
 
-    return(len);
+    //return(len);
 }
 
 // returns a count of the tokens found.
@@ -86,7 +86,7 @@ int parse(std::string tupin) {
 		newt->close();
 		newt = newt->back();
 
-		// a bound element () counts as a token
+		// any bound element () counts as a token
 		std::cout << "LITHP :: parse(close) --> newt @" << newt << '\n';
 		tks++;
 		break;
@@ -102,10 +102,19 @@ int parse(std::string tupin) {
 		    return (-3);
 		}
 
+		else if (expr->full()) {
+		    std::cout << "unexpected operand. expected '(' or ')'\n";
+		    return (-5);
+		}
+
+		// we have a valid expression object. parse a token and
+		// populate the object. prefer head, then tail.
 		if (std::ispunct(ch, filter)) {
 		    std::cout << "LITHP :: parse --> operator? ";
 		    if (knownop(ch)) {
 			std::cout << "valid\n";
+
+			expr->setop(ch);
 
 			tks++;
 		    } else {
@@ -122,8 +131,12 @@ int parse(std::string tupin) {
 		    // need to offset by one because the idx incrementor is
 		    //   part of the character selection above.
 		    idx -= 1;
-		    idx += cull(tupin, idx, &tok);
+
+		    // keep going until we encounter a non-alnum character
+		    cull(tupin, idx, &tok);
+		    idx += tok.length();
 		    std::cout << "LITHP :: parse --> culled token: " << tok << '\n';
+
 		    tks++;
 
 		    if (pureint) {

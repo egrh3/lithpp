@@ -1,3 +1,5 @@
+// I've seen some magic working with anonymous enums. I want to see if
+// what I remember is something I can use to avoid an extra binding.
 enum types {
     VT_STRING = 0,
     VT_INT,
@@ -13,6 +15,8 @@ enum opers {
     OP_EOL
 };
 
+typedef int token_t;
+
 typedef struct _node {
 private:
     struct _node* prev;
@@ -23,7 +27,8 @@ private:
     bool closed;
 
     // an enumeration of value types
-    int type;
+    int t_type;
+    int t_operation;
 
     union value {
 	std::string string;
@@ -37,6 +42,9 @@ public:
 	prev = NULL;
 	head = NULL;
 	tail = NULL;
+
+	// assume a list: (h, (h, t))
+	t_operation = OP_LIST;
 
 	opened = true;
 	closed = false;
@@ -60,6 +68,23 @@ public:
     struct _node* back() {
 	std::cout << "node->back() :: getting prev node\n";
 	return(prev);
+    }
+
+    bool full() {
+	return((this->head != NULL) && (this->tail != NULL));
+    }
+
+    // this means I have the operators defined in TWO places.
+    void setop(char ch) {
+	switch(ch) {
+	    case '+':
+		this->t_operation = OP_ADD;
+		break;
+	    default:
+		this->t_operation = OP_LIST;
+		break;
+	}
+	std::cout << "node->setop() :: operation set: " << this->t_operation << "\n";
     }
 
     void push(_node* way) {
