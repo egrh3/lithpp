@@ -19,7 +19,11 @@ int main(int argc, char *argv[])
 	add_history(tupin.c_str());
 
 	tks = parse(tupin);
-	std::cout << "counted " << tks << " after parsing\n";
+	if (tks < 0) {
+	    std::cerr << "parsing error(" << tks << "). try again\n";
+	} else {
+	    std::cout << "counted " << tks << " after parsing\n";
+	}
     } while(tupin != "(quit)");
 
     return 0;

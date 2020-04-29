@@ -5,12 +5,24 @@
 // for prototyping, assume C. should probably pull in from ENV
 std::locale filter("C");
 
+// flag used to determine if a string input is a pure integer.
+// I should eventually be aware of floats and different bases.
+bool pureint;
+
 size_t cull(std::string tupin, size_t idx, std::string* op) {
     size_t len = 0;
+
+    // force set and check the first character.
     unsigned char ch = tupin[idx+len];
+    pureint = isdigit(ch);
 
     std::cout << "LITHP :: culling --> ";
     while(isalnum(ch)) {
+
+	// only check isdigit() if we're already though to be a number
+	if (pureint && !isdigit(ch))
+	    pureint = false;
+
 	std::cout << ch;
 	ch = tupin[idx + (++len)];
     }
@@ -68,6 +80,7 @@ int parse(std::string tupin) {
 
 	    default:
 		if (expr == NULL) {
+		    // this input dosen't error: "(+ 2 3) ndh()"
 		    std::cout << "parsing error, identifier encountered before open expression\n";
 		    return (-3);
 		}
@@ -85,9 +98,18 @@ int parse(std::string tupin) {
 
 		    // need to offset by one because the idx incrementor is
 		    //   part of the character selection above.
-		    idx += cull(tupin, idx-1, &op);
+		    idx -= 1;
+		    idx += cull(tupin, idx, &op);
 		    std::cout << "LITHP :: parse --> culled token: " << op << '\n';
 		    tks++;
+
+		    if (pureint) {
+			std::cout << "LITHPP :: parse --> identified pure integer\n";
+		    }
+
+		    if (tupin[idx] == '(') {
+			std::cout << "LITHPP :: parse --> identified function head\n";
+		    }
 		}
 
 		else {

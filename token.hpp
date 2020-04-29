@@ -1,3 +1,17 @@
+enum types {
+    VT_STRING = 0,
+    VT_INT,
+    VT_EOL
+};
+
+enum opers {
+    OP_LIST = 0,
+    OP_MULTI,
+    OP_DIVIS,
+    OP_ADD,
+    OP_SUB,
+    OP_EOL
+};
 
 typedef struct _node {
 private:
@@ -15,9 +29,8 @@ private:
 	std::string string;
 	char	    character;
 	int	    integer;
-    }
+    };
 
-	
 public:
     _node() {
 	std::cout << "node->() :: creation of new node\n";
@@ -45,7 +58,7 @@ public:
     }
 
     struct _node* back() {
-	std::cout << "node->pop() :: getting prev node\n";
+	std::cout << "node->back() :: getting prev node\n";
 	return(prev);
     }
 
@@ -68,19 +81,18 @@ public:
     // its operation. not sure how to properly do that. especially
     // with unknown / variable types.
     void eval() {
-	prev->result(this) = this->oper(head, tail);
+	//prev->result(this) = this->oper(head, tail);
     }
 
-    
     // i think this needs to return the address of "head" or "tail"
     // i think this needs an operator= override ..
-    node* result(node* caller) {
+    _node* result(_node* caller) {
 	if (head == caller) {
-	    return(&node)
+	    return(head);
 	}
 
 	else if (tail == caller) {
-	    return(&node)
+	    return(tail);
 	}
     }
 
