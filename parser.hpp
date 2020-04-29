@@ -9,8 +9,25 @@ std::locale filter("C");
 // I should eventually be aware of floats and different bases.
 bool pureint;
 
-size_t cull(std::string tupin, size_t idx, std::string* op) {
-    size_t len = 0;
+// doubling up the operators here supports multi-char operators.
+// if this weren't const, it could be modified during runtime.
+// like, for defining new operators!
+//    void addop(newop) { strcat(validops, newop) }
+const std::string validops = "()*/++--&&";
+
+//bool knownop(std::string tupin, std::size_t idx, std::string* op) {
+bool knownop(const char op) {
+    std::size_t foundop = validops.find(op);
+    if (foundop != std::string::npos) {
+        return(true);
+    } else {
+	return(false);
+    }
+}
+
+
+std::size_t cull(std::string tupin, std::size_t idx, std::string* tok) {
+    std::size_t len = 0;
 
     // force set and check the first character.
     unsigned char ch = tupin[idx+len];
@@ -28,15 +45,15 @@ size_t cull(std::string tupin, size_t idx, std::string* op) {
     }
     std::cout << '\n';
 
-    *op = tupin.substr(idx, len);
+    *tok = tupin.substr(idx, len);
 
     return(len);
 }
 
 // returns a count of the tokens found.
 int parse(std::string tupin) {
-    size_t idx = 0;
-    size_t tks = 0;
+    std::size_t idx = 0;
+    std::size_t tks = 0;
     char ch = '\0';	// temp value rather than empty string.
 
     // for each call, generate a new expression
@@ -85,22 +102,28 @@ int parse(std::string tupin) {
 		    return (-3);
 		}
 
-		// strings, numbers, and other bindings are tokens.
 		if (std::ispunct(ch, filter)) {
-		    std::cout << "LITHP :: parse --> operator\n";
+		    std::cout << "LITHP :: parse --> operator? ";
+		    if (knownop(ch)) {
+			std::cout << "valid\n";
 
-		    tks++;
+			tks++;
+		    } else {
+			std::cout << "UNKOP\n";
+			return (-4);
+		    }
 		}
 
+		// strings, numbers, and other bindings are tokens.
 		else if (std::isalnum(ch, filter)) {
 		    std::cout << "LITHP :: parse --> token\n";
-		    std::string op;
+		    std::string tok;
 
 		    // need to offset by one because the idx incrementor is
 		    //   part of the character selection above.
 		    idx -= 1;
-		    idx += cull(tupin, idx, &op);
-		    std::cout << "LITHP :: parse --> culled token: " << op << '\n';
+		    idx += cull(tupin, idx, &tok);
+		    std::cout << "LITHP :: parse --> culled token: " << tok << '\n';
 		    tks++;
 
 		    if (pureint) {
