@@ -1,125 +1,93 @@
-// I've seen some magic working with anonymous enums. I want to see if
-// what I remember is something I can use to avoid an extra binding.
-enum types {
-    VT_STRING = 0,
-    VT_INT,
-    VT_EOL
-};
+#ifndef H_TOKEN
+#define H_TOKEN
 
-enum opers {
-    OP_LIST = 0,
-    OP_MULTI,
-    OP_DIVIS,
-    OP_ADD,
-    OP_SUB,
-    OP_EOL
-};
+#include <variant>
 
-typedef int token_t;
+struct _node;
+typedef std::variant<_node*, std::string, int> token;
 
 typedef struct _node {
 private:
-    struct _node* prev;
-    struct _node* head;
-    struct _node* tail;
+    _node* prev;
+    token head;
+    token tail;
+
+    // operational function
+    token (*oper) (token, token);
 
     bool opened;
     bool closed;
 
-    // an enumeration of value types
-    int t_type;
-    int t_operation;
-
-    union value {
-	std::string string;
-	char	    character;
-	int	    integer;
-    };
-
 public:
     _node() {
-	std::cout << "node->() :: creation of new node\n";
-	prev = NULL;
-	head = NULL;
-	tail = NULL;
-
-	// assume a list: (h, (h, t))
-	t_operation = OP_LIST;
+	prev = nullptr;
+	head = nullptr;
+	tail = nullptr;
 
 	opened = true;
 	closed = false;
+
+	oper = nullptr;
     }
 
-    ~_node() {
-	std::cout << "node->(~) :: deletion of node\n";
-	if (head != NULL)
-	    head->prev = prev;
-	if (tail != NULL)
-	    tail->prev = prev;
-    }
-
-    struct _node* pop() {
-	_node* parent = prev;
-	delete(this);
-
-	return(parent);
-    }
-
-    struct _node* back() {
-	std::cout << "node->back() :: getting prev node\n";
-	return(prev);
-    }
-
-    bool full() {
-	return((this->head != NULL) && (this->tail != NULL));
-    }
-
-    // this means I have the operators defined in TWO places.
-    void setop(char ch) {
-	switch(ch) {
-	    case '+':
-		this->t_operation = OP_ADD;
-		break;
-	    default:
-		this->t_operation = OP_LIST;
-		break;
+    token eval() {
+	try {
+	    head = std::get<_node*>(head)->eval();
 	}
-	std::cout << "node->setop() :: operation set: " << this->t_operation << "\n";
-    }
+	catch (const std::bad_variant_access&) {
+	}
 
-    void push(_node* way) {
-	std::cout << "node->push() :: adding new token to chain\n";
-	way->prev = this;
+	try {
+	    tail = std::get<_node*>(tail)->eval();
+	}
+	catch (const std::bad_variant_access&) {
+	}
+
+	tail = this->oper(head, tail);
+	return tail;
+    };
+
+    void set_value(token v) {
+	if (std::get<_node*>(head) == nullptr) {
+	    head = v;
+	}
+
+	else if (std::get<_node*>(tail) == nullptr) {
+	    tail = v;
+	}
     }
 
     bool is_closed() {
-	return(this->closed);
+	return(closed);
     }
 
     void close() {
-	std::cout << "node->close() :: closing token\n";
-	this->opened = false;
-	this->closed = true;
-    }
-
-    // I'm hoping to replace this (o h t) token with the result of
-    // its operation. not sure how to properly do that. especially
-    // with unknown / variable types.
-    void eval() {
-	//prev->result(this) = this->oper(head, tail);
-    }
-
-    // i think this needs to return the address of "head" or "tail"
-    // i think this needs an operator= override ..
-    _node* result(_node* caller) {
-	if (head == caller) {
-	    return(head);
-	}
-
-	else if (tail == caller) {
-	    return(tail);
+	if (opened && !closed) {
+	    this->opened = false;
+	    this->closed = true;
 	}
     }
 
+    void push(_node* parent) {
+	std::cout << "token -> push :: poke!\n";
+	this->prev = parent;
+    }
+
+    _node* pop() {
+	std::cout << "token -> pop :: thwip!\n";
+	std::cout << "token -> pop :: prev@" << prev << "\n";
+	return(this->prev);
+    }
+
+    bool full() {
+	return (
+	    (std::get<_node*>(head) != nullptr) &&
+	    (std::get<_node*>(tail) != nullptr)
+	);
+    }
+
+    void setop(void*) {
+    }
 } node;
 
+#endif

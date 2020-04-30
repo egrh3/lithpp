@@ -1,6 +1,7 @@
 #include <locale>	// ctype functions: isalnum, &c..
 
 #include "token.hpp"
+#include "operations.hpp"
 
 // for prototyping, assume C. should probably pull in from ENV
 std::locale filter("C");
@@ -8,22 +9,6 @@ std::locale filter("C");
 // flag used to determine if a string input is a pure integer.
 // I should eventually be aware of floats and different bases.
 bool pureint;
-
-// doubling up the operators here supports multi-char operators.
-// if this weren't const, it could be modified during runtime.
-// like, for defining new operators!
-//    void addop(newop) { strcat(validops, newop) }
-const std::string validops = "()*/++--&&";
-
-//bool knownop(std::string tupin, std::size_t idx, std::string* op) {
-bool knownop(const char op) {
-    std::size_t foundop = validops.find(op);
-    if (foundop != std::string::npos) {
-        return(true);
-    } else {
-	return(false);
-    }
-}
 
 // I want to change the return of cull() to the discovered token type.
 void cull(std::string tupin, std::size_t idx, std::string* tok) {
@@ -51,14 +36,13 @@ void cull(std::string tupin, std::size_t idx, std::string* tok) {
 }
 
 // returns a count of the tokens found.
-int parse(std::string tupin) {
+int parse(std::string tupin, node* expr) {
     std::size_t idx = 0;
     std::size_t tks = 0;
     char ch = '\0';	// temp value rather than empty string.
 
     // for each call, generate a new expression
-    node* expr = NULL;
-    node* newt = NULL;
+    node* newt = nullptr;
 
     while((ch = tupin[idx++]) != '\0') {
 	std::cout << "LITHP :: parse --> peek: " << ch << '\n';
@@ -69,25 +53,29 @@ int parse(std::string tupin) {
 		// in most every case, we simply create a new node
 		// we use 'newt' to create the new token we are parsing.
 		newt = new(node);
-		if (expr != NULL)
-		    expr->push(newt);
-		else
-		    expr = newt;
+		if (expr != nullptr) {
+		    newt->push(expr);
+		}
 
-		std::cout << "LITHP :: parse(open) --> newt @" << newt << '\n';
+		expr = newt;
+		std::cout << "LITHP :: parse(open) --> expr @" << expr << '\n';
 		break;
 
 	    case ')':
 		std::cout << "LITHP :: parse --> close\n";
-		if ((newt == NULL) || newt->is_closed()) {
+		if ((expr == nullptr) || expr->is_closed()) {
 		    std::cout << "parsing error, unexpected closure\n";
 		    return(-2);
 		}
-		newt->close();
-		newt = newt->back();
+
+		expr->close();
+		if (expr->pop()) {
+		    std::cout << "LITHP :: parse(close) --> up one\n";
+		    expr = expr->pop();
+		}
 
 		// any bound element () counts as a token
-		std::cout << "LITHP :: parse(close) --> newt @" << newt << '\n';
+		std::cout << "LITHP :: parse(close) --> expr @" << expr << '\n';
 		tks++;
 		break;
 
@@ -96,7 +84,7 @@ int parse(std::string tupin) {
 		break;
 
 	    default:
-		if (expr == NULL) {
+		if (expr == nullptr) {
 		    // this input dosen't error: "(+ 2 3) ndh()"
 		    std::cout << "parsing error, identifier encountered before open expression\n";
 		    return (-3);
@@ -113,8 +101,6 @@ int parse(std::string tupin) {
 		    std::cout << "LITHP :: parse --> operator? ";
 		    if (knownop(ch)) {
 			std::cout << "valid\n";
-
-			expr->setop(ch);
 
 			tks++;
 		    } else {
