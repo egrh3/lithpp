@@ -4,16 +4,16 @@
 #include <iostream>
 
 struct _node;
-typedef std::variant<_node*, std::string, int> stub;
+typedef std::variant<_node*, std::string, int> token;
 
 typedef struct _node {
     _node* prev;
-    stub head;
-    stub tail;
+    token head;
+    token tail;
 
-    stub (*oper) (stub, stub);
+    token (*oper) (token, token);
 
-    stub eval() {
+    token eval() {
 	try {
 	    head = std::get<_node*>(head)->eval();
 	}
@@ -31,10 +31,16 @@ typedef struct _node {
     };
 } node;
 
-stub add(stub h, stub t) {
+token add(token h, token t) {
     int l = std::get<int>(h);
     int r = std::get<int>(t);
     return (l + r);
+}
+
+token sub(token h, token t) {
+    int l = std::get<int>(h);
+    int r = std::get<int>(t);
+    return (l - r);
 }
 
 int main(int argc, char *argv[])
@@ -45,7 +51,7 @@ int main(int argc, char *argv[])
     e->oper = (*add);
 
     node* f = new(node);
-    f->oper = (*add);
+    f->oper = (*sub);
     f->head = 22;
     f->tail = 11;
     e->head = f;
