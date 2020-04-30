@@ -33,17 +33,20 @@ public:
     token eval() {
 	try {
 	    head = std::get<_node*>(head)->eval();
+	    head = this->oper(head, tail);
 	}
 	catch (const std::bad_variant_access&) {
 	}
 
 	try {
 	    tail = std::get<_node*>(tail)->eval();
+	    tail = this->oper(head, tail);
 	}
 	catch (const std::bad_variant_access&) {
 	}
 
-	tail = this->oper(head, tail);
+	// original call; doesn't assign anything to head
+	//tail = this->oper(head, tail);
 	return tail;
     };
 
@@ -87,6 +90,24 @@ public:
     }
 
     void setop(void*) {
+    }
+
+    void purge() {
+	try {
+	    _node* h = std::get<_node*>(head);
+	    h->purge();
+	    delete(h);
+	}
+	catch (const std::bad_variant_access&) {
+	}
+
+	try {
+	    _node* t = std::get<_node*>(tail);
+	    t->purge();
+	    delete(t);
+	}
+	catch (const std::bad_variant_access&) {
+	}
     }
 } node;
 
