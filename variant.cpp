@@ -15,6 +15,12 @@ typedef struct _node {
 
     stub eval() {
 	try {
+	    head = std::get<_node*>(head)->eval();
+	}
+	catch (const std::bad_variant_access&) {
+	}
+
+	try {
 	    tail = std::get<_node*>(tail)->eval();
 	}
 	catch (const std::bad_variant_access&) {
@@ -34,17 +40,22 @@ stub add(stub h, stub t) {
 int main(int argc, char *argv[])
 {
     node* e = new(node);
-    node* n = new(node);
 
+    //(+ (+ 22 11) (+ 33 44))
     e->oper = (*add);
-    e->tail = n;
-    e->head = 245;
 
-    n->oper = (*add);
-    n->head = 44;
-    n->tail = 11;
+    node* f = new(node);
+    f->oper = (*add);
+    f->head = 22;
+    f->tail = 11;
+    e->head = f;
 
-    stub r = e->eval();
-    std::visit([](auto x) { std::cout << x << "\n";}, r);
+    node* g = new(node);
+    g->oper = (*add);
+    g->head = 33;
+    g->tail = 44;
+    e->tail = g;
+
+    std::visit([](auto x) { std::cout << x << "\n";}, e->eval());
     return 0;
 }
