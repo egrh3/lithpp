@@ -18,24 +18,33 @@ typedef struct _node {
 	    tail = std::get<_node*>(tail)->eval();
 	}
 	catch (const std::bad_variant_access&) {
-	    tail = this->oper(head, tail);
 	}
 
+	tail = this->oper(head, tail);
 	return tail;
     };
 } node;
 
+stub add(stub h, stub t) {
+    int l = std::get<int>(h);
+    int r = std::get<int>(t);
+    return (l + r);
+}
+
 int main(int argc, char *argv[])
 {
-    node e;
-    node n;
+    node* e = new(node);
+    node* n = new(node);
 
-    e.head = "ndht";
-    std::visit([](auto x) { std::cout << x << '\n';}, e.head);
+    e->oper = (*add);
+    e->tail = n;
+    e->head = 245;
 
-    n.tail = 52345;
-    std::visit([](auto x) { std::cout << x << '\n';}, n.tail);
+    n->oper = (*add);
+    n->head = 44;
+    n->tail = 11;
 
-    e.tail = &n;
+    stub r = e->eval();
+    std::visit([](auto x) { std::cout << x << "\n";}, r);
     return 0;
 }
