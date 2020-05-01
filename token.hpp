@@ -30,6 +30,13 @@ public:
 	oper = nullptr;
     }
 
+    friend std::ostream& operator<< (std::ostream& outs, _node& RHS) {
+	outs << "expr(" << &RHS      << "); ";
+	outs << "prev(" << &(RHS.prev) << ")";
+
+	return(outs);
+    }
+
     token eval() {
 	try {
 	    head = std::get<_node*>(head)->eval();
@@ -72,7 +79,8 @@ public:
     }
 
     void push(_node* parent) {
-	std::cout << "token -> push :: poke!\n";
+	std::cout << "token -> push(" << this << ") ";
+	std::cout << ":: parent(" << parent << "\n";
 	this->prev = parent;
     }
 
@@ -110,7 +118,5 @@ public:
 	}
     }
 } node;
-
-node* expr = nullptr;
 
 #endif

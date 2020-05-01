@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <vector>
 
 // C libraries. with some coaxing, these should be helpful.
 #include <readline/readline.h>
@@ -15,24 +16,30 @@ int main(int argc, char *argv[])
     int tks = 0;
     std::string tupin;
 
+    std::vector<node*> chain;
+
     do {
 	tupin = readline("\n? ");
 	add_history(tupin.c_str());
 
-	tks = parse(tupin);
+	tks = parse(tupin, &chain);
+	// parse() returns (-idx) on error. for one liners,
+	// this will let us identify the rogue token.
+	// <g> won't fix actual parser errors, though.
 	if (tks < 0) {
-	    std::cerr << "parsing error(" << tks << "). try again\n";
+	    std::cerr << "\n";
+	    std::cerr << "input: " << tupin << "\n";
+	    std::cerr << "error: ";
+	    std::cerr.width(-tks);
+	    std::cerr.fill(' ');
+	    std::cerr << "^" << "\n";
+
 	} else {
 	    std::cout << "counted " << tks << " after parsing\n";
+	    prn_chain(&chain);
 	}
 
-	prn_expr();
-
-	// so broken
-	//expr.purge();
-
-	delete(expr);
-	expr = nullptr;
+	chain.clear();
 
     } while(tupin != "(quit)");
 

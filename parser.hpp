@@ -1,4 +1,5 @@
 #include <locale>	// ctype functions: isalnum, &c..
+#include <vector>
 
 #include "token.hpp"
 #include "operations.hpp"
@@ -37,13 +38,16 @@ void cull(std::string tupin, std::size_t idx, std::string* tok) {
 
 // how do I handle input like "()()" ? a vector<node>?
 // returns a count of the tokens found.
-int parse(std::string tupin) {
+int parse(std::string tupin, std::vector<node*>* chain) {
     std::size_t idx = 0;
     std::size_t tks = 0;
     char ch = '\0';	// temp value rather than empty string.
 
     // for each call, generate a new expression
     node* newt = nullptr;
+    node* expr = nullptr;
+
+    std::cout << "expr: " << expr << " / newt: " << newt << "\n";
 
     while((ch = tupin[idx++]) != '\0') {
 	std::cout << "LITHP :: parse --> peek: " << ch << '\n';
@@ -51,14 +55,17 @@ int parse(std::string tupin) {
 	switch(ch) {
 	    case '(':
 		std::cout << "LITHP :: parse --> open\n";
-		// in most every case, we simply create a new node
-		// we use 'newt' to create the new token we are parsing.
+
 		newt = new(node);
 		if (expr) {
-		    newt->push(expr);
+		    if (!expr->is_closed()) {
+			newt->push(expr);
+		    }
 		}
 
+		chain->push_back(expr);
 		expr = newt;
+
 		std::cout << "LITHP :: parse(open) --> expr @" << expr << '\n';
 		break;
 
@@ -66,12 +73,11 @@ int parse(std::string tupin) {
 		std::cout << "LITHP :: parse --> close\n";
 		if ((expr == nullptr) || expr->is_closed()) {
 		    std::cout << "parsing error, unexpected closure\n";
-		    return(-2);
+		    return(-idx);
 		}
 
 		expr->close();
-		// there's a logic error where ()() triggers this.
-		// probably due to the open assuming it's a sub-expr.
+
 		if (newt = expr->pop()) {
 		    std::cout << "LITHP :: parse(close) --> up one\n";
 		    expr = newt;
@@ -90,12 +96,12 @@ int parse(std::string tupin) {
 		if (expr == nullptr) {
 		    // this input dosen't error: "(+ 2 3) ndh()"
 		    std::cout << "parsing error, identifier before open expression\n";
-		    return (-3);
+		    return (-idx);
 		}
 
 		else if (expr->full()) {
 		    std::cout << "unexpected operand. expected '(' or ')'\n";
-		    return (-5);
+		    return (-idx);
 		}
 
 		// we have a valid expression object. parse a token and
@@ -108,7 +114,7 @@ int parse(std::string tupin) {
 			tks++;
 		    } else {
 			std::cout << "UNKOP\n";
-			return (-4);
+			return (-idx);
 		    }
 		}
 
@@ -139,14 +145,14 @@ int parse(std::string tupin) {
 
 		else {
 		    std::cout << "LITHP :: parse --> parse error\n";
-		    return(-1);
+		    return(-idx);
 		}
 	}
     }
 
     if (!expr->is_closed()) {
 	std::cout << "LITHP :: parse --> input finished without closing expr\n";
-	return(-6);
+	return(-idx);
     }
 
     else {
