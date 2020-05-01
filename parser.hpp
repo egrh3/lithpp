@@ -63,8 +63,8 @@ int parse(std::string tupin, std::vector<node*>* chain) {
 		    }
 		}
 
-		chain->push_back(expr);
 		expr = newt;
+		chain->push_back(expr);
 
 		std::cout << "LITHP :: parse(open) --> expr @" << expr << '\n';
 		break;
