@@ -72,7 +72,7 @@ int parse(std::string tupin, std::vector<node*>* chain) {
 	    case ')':
 		std::cout << "LITHP :: parse --> close\n";
 		if ((expr == nullptr) || expr->is_closed()) {
-		    std::cout << "parsing error, unexpected closure\n";
+		    std::cerr << "parsing error, unexpected closure\n";
 		    return(-idx);
 		}
 
@@ -95,12 +95,12 @@ int parse(std::string tupin, std::vector<node*>* chain) {
 	    default:
 		if (expr == nullptr) {
 		    // this input dosen't error: "(+ 2 3) ndh()"
-		    std::cout << "parsing error, identifier before open expression\n";
+		    std::cerr << "parsing error, identifier before open expression\n";
 		    return (-idx);
 		}
 
 		else if (expr->full()) {
-		    std::cout << "unexpected operand. expected '(' or ')'\n";
+		    std::cerr << "unexpected operand. expected '(' or ')'\n";
 		    return (-idx);
 		}
 
@@ -144,14 +144,14 @@ int parse(std::string tupin, std::vector<node*>* chain) {
 		}
 
 		else {
-		    std::cout << "LITHP :: parse --> parse error\n";
+		    std::cerr << "LITHP :: parse --> parse error\n";
 		    return(-idx);
 		}
 	}
     }
 
     if (!expr->is_closed()) {
-	std::cout << "LITHP :: parse --> input finished without closing expr\n";
+	std::cerr << "LITHP :: parse --> input finished without closing expr\n";
 	return(-idx);
     }
 
