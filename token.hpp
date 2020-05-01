@@ -90,6 +90,9 @@ public:
 	return(this->prev);
     }
 
+    // this is GOING to fail. if the active type is not the one
+    // requested, the variant throws std::bad_variant_access. I
+    // should be able to use that here and in pick().
     bool full() {
 	return (
 	    (std::get<_node*>(head) != nullptr) &&
@@ -100,22 +103,17 @@ public:
     void setop(void*) {
     }
 
-    void purge() {
-	try {
-	    _node* h = std::get<_node*>(head);
-	    h->purge();
-	    delete(h);
-	}
-	catch (const std::bad_variant_access&) {
+    template<typename T>
+    token pick<T>() {
+	if (!std::get_if<T>(head)) {
+	    return(head);
 	}
 
-	try {
-	    _node* t = std::get<_node*>(tail);
-	    t->purge();
-	    delete(t);
+	if (!std::get_if<T>(tail)) {
+	    return(tail);
 	}
-	catch (const std::bad_variant_access&) {
-	}
+
+	return(nullptr);
     }
 } node;
 
