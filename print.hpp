@@ -3,7 +3,9 @@
 
 #include "token.hpp"
 
-void prn_expr(node* expr) {
+extern node* expr;
+
+void prn_expr() {
     std::cout << "expr: " << expr << "\n";
 }
 

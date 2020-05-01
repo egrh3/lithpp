@@ -35,8 +35,9 @@ void cull(std::string tupin, std::size_t idx, std::string* tok) {
     //return(len);
 }
 
+// how do I handle input like "()()" ? a vector<node>?
 // returns a count of the tokens found.
-int parse(std::string tupin, node* expr) {
+int parse(std::string tupin) {
     std::size_t idx = 0;
     std::size_t tks = 0;
     char ch = '\0';	// temp value rather than empty string.
@@ -53,7 +54,7 @@ int parse(std::string tupin, node* expr) {
 		// in most every case, we simply create a new node
 		// we use 'newt' to create the new token we are parsing.
 		newt = new(node);
-		if (expr != nullptr) {
+		if (expr) {
 		    newt->push(expr);
 		}
 
@@ -69,9 +70,11 @@ int parse(std::string tupin, node* expr) {
 		}
 
 		expr->close();
-		if (expr->pop()) {
+		// there's a logic error where ()() triggers this.
+		// probably due to the open assuming it's a sub-expr.
+		if (newt = expr->pop()) {
 		    std::cout << "LITHP :: parse(close) --> up one\n";
-		    expr = expr->pop();
+		    expr = newt;
 		}
 
 		// any bound element () counts as a token
@@ -86,7 +89,7 @@ int parse(std::string tupin, node* expr) {
 	    default:
 		if (expr == nullptr) {
 		    // this input dosen't error: "(+ 2 3) ndh()"
-		    std::cout << "parsing error, identifier encountered before open expression\n";
+		    std::cout << "parsing error, identifier before open expression\n";
 		    return (-3);
 		}
 
@@ -141,5 +144,12 @@ int parse(std::string tupin, node* expr) {
 	}
     }
 
-    return(tks);
+    if (!expr->is_closed()) {
+	std::cout << "LITHP :: parse --> input finished without closing expr\n";
+	return(-6);
+    }
+
+    else {
+        return(tks);
+    }
 }

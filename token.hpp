@@ -111,4 +111,6 @@ public:
     }
 } node;
 
+node* expr = nullptr;
+
 #endif

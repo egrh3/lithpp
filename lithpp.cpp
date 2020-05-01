@@ -19,19 +19,20 @@ int main(int argc, char *argv[])
 	tupin = readline("\n? ");
 	add_history(tupin.c_str());
 
-	node expr;
-
-	tks = parse(tupin, &expr);
+	tks = parse(tupin);
 	if (tks < 0) {
 	    std::cerr << "parsing error(" << tks << "). try again\n";
 	} else {
 	    std::cout << "counted " << tks << " after parsing\n";
 	}
 
-	prn_expr(&expr);
+	prn_expr();
 
 	// so broken
 	//expr.purge();
+
+	delete(expr);
+	expr = nullptr;
 
     } while(tupin != "(quit)");
 
