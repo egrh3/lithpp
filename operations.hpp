@@ -34,4 +34,10 @@ token sub(token h, token t) {
     return (l - r);
 }
 
+void evaluate(std::vector<node*>* chain) {
+    for (auto e: *chain) {
+	e->eval();
+    }
+}
+
 #endif

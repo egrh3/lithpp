@@ -6,11 +6,25 @@
 struct _node;
 typedef std::variant<_node*, std::string, int> token;
 
+template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+
+enum fill_lvl {
+    OPEN = 0,
+    HALF,
+    FULL,
+    EOL
+};
+
 typedef struct _node {
 private:
     _node* prev;
     token head;
     token tail;
+
+    unsigned int fill;
+    unsigned int head_t;
+    unsigned int tail_t;
 
     // operational function
     token (*oper) (token, token);
@@ -28,11 +42,15 @@ public:
 	closed = false;
 
 	oper = nullptr;
+	fill = OPEN;
     }
 
     friend std::ostream& operator<< (std::ostream& outs, _node& RHS) {
-	outs << "expr(" << &RHS      << "); ";
-	outs << "prev(" << &(RHS.prev) << ")";
+	//outs << "expr(" << &RHS      << "); ";
+	//outs << "prev(" << &(RHS.prev) << ")";
+	for (auto c: *RHS) {
+	    std::visit(overloaded {[](auto n) { outs << n; } }, c);
+	}
 
 	return(outs);
     }
@@ -57,14 +75,24 @@ public:
 	return tail;
     };
 
-    void set_value(token v) {
-	if (std::get<_node*>(head) == nullptr) {
-	    head = v;
+    void push_value(token v) {
+	switch(fill) {
+	    case OPEN:
+		this->head = v;
+		break;
+
+	    case HALF:
+		this->tail = v;
+		break;
+
+	    case FULL:
+	    default:
+		std::cerr << "token :: push_two --> OOPS! full node\n";
+		return;
+
 	}
 
-	else if (std::get<_node*>(tail) == nullptr) {
-	    tail = v;
-	}
+	fill++;
     }
 
     bool is_closed() {
@@ -94,27 +122,12 @@ public:
     // requested, the variant throws std::bad_variant_access. I
     // should be able to use that here and in pick().
     bool full() {
-	return (
-	    (std::get<_node*>(head) != nullptr) &&
-	    (std::get<_node*>(tail) != nullptr)
-	);
+	return (fill == FULL);
     }
 
     void setop(void*) {
     }
 
-    template<typename T>
-    token pick<T>() {
-	if (!std::get_if<T>(head)) {
-	    return(head);
-	}
-
-	if (!std::get_if<T>(tail)) {
-	    return(tail);
-	}
-
-	return(nullptr);
-    }
 } node;
 
 #endif

@@ -36,6 +36,8 @@ int main(int argc, char *argv[])
 
 	} else {
 	    std::cout << "counted " << tks << " after parsing\n";
+
+	    evaluate(&chain);
 	    prn_chain(&chain);
 	}
 

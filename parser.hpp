@@ -1,5 +1,6 @@
 #include <locale>	// ctype functions: isalnum, &c..
 #include <vector>
+#include <cstdlib>
 
 #include "token.hpp"
 #include "operations.hpp"
@@ -122,6 +123,7 @@ int parse(std::string tupin, std::vector<node*>* chain) {
 		else if (std::isalnum(ch, filter)) {
 		    std::cout << "LITHP :: parse --> token\n";
 		    std::string tok;
+		    token tmp;
 
 		    // need to offset by one because the idx incrementor is
 		    //   part of the character selection above.
@@ -132,15 +134,22 @@ int parse(std::string tupin, std::vector<node*>* chain) {
 		    idx += tok.length();
 		    std::cout << "LITHP :: parse --> culled token: " << tok << '\n';
 
-		    tks++;
+		    if (tupin[idx + 1] == '(') {
+			std::cout << "LITHPP :: parse --> identified function head\n";
+		    }
 
-		    if (pureint) {
+		    else if (pureint) {
+			tmp = std::atoi(tok.c_str());
 			std::cout << "LITHPP :: parse --> identified pure integer\n";
 		    }
 
-		    if (tupin[idx] == '(') {
-			std::cout << "LITHPP :: parse --> identified function head\n";
+		    else {
+			tmp = tok;
 		    }
+
+		    tks++;
+		    expr->push_value( tmp );
+
 		}
 
 		else {
