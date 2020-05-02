@@ -3,8 +3,11 @@
 
 #include <variant>
 
+
 struct _node;
 typedef std::variant<_node*, std::string, int> token;
+
+typedef token (*op)(token, token);
 
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
@@ -46,16 +49,14 @@ public:
     }
 
     friend std::ostream& operator<< (std::ostream& outs, _node& RHS) {
-	//outs << "expr(" << &RHS      << "); ";
-	//outs << "prev(" << &(RHS.prev) << ")";
-	for (auto c: *RHS) {
-	    std::visit(overloaded {[](auto n) { outs << n; } }, c);
-	}
+	outs << "expr(" << &RHS      << "); ";
+	outs << "prev(" << &(RHS.prev) << ")";
 
 	return(outs);
     }
 
     token eval() {
+	std::cout << "LITHP :: eval --> eval(head)\n";
 	try {
 	    head = std::get<_node*>(head)->eval();
 	    head = this->oper(head, tail);
@@ -63,6 +64,7 @@ public:
 	catch (const std::bad_variant_access&) {
 	}
 
+	std::cout << "LITHP :: eval --> eval(tail)\n";
 	try {
 	    tail = std::get<_node*>(tail)->eval();
 	    tail = this->oper(head, tail);
@@ -118,16 +120,67 @@ public:
 	return(this->prev);
     }
 
-    // this is GOING to fail. if the active type is not the one
-    // requested, the variant throws std::bad_variant_access. I
-    // should be able to use that here and in pick().
     bool full() {
 	return (fill == FULL);
     }
 
-    void setop(void*) {
+    void setop(op fn) {
+	std::cout << "token -> steop :: sting<- operation set\n";
+	this->oper = fn;
     }
 
 } node;
+
+
+// doubling up the operators here supports multi-char operators.
+// if this weren't const, it could be modified during runtime.
+// like, for defining new operators!
+//    void addop(newop) { strcat(validops, newop) }
+const std::string validops = "()*/++--&&";
+
+//bool knownop(std::string tupin, std::size_t idx, std::string* op) {
+bool knownop(const char op) {
+    std::size_t foundop = validops.find(op);
+    if (foundop != std::string::npos) {
+        return(true);
+    } else {
+	return(false);
+    }
+}
+
+void noop(token h, token t) {
+}
+
+token add(token h, token t) {
+    int l = std::get<int>(h);
+    int r = std::get<int>(t);
+    std::cout << "op(add) :: " << l+r << "\n";
+    return (l + r);
+}
+
+token sub(token h, token t) {
+    int l = std::get<int>(h);
+    int r = std::get<int>(t);
+    std::cout << "op(sub) :: " << l-r << "\n";
+    return (l - r);
+}
+
+void evaluate(std::vector<node*>* chain) {
+    std::cout << "LITHP :: evaluate -> calling into chain\n";
+    for (auto e: *chain) {
+	e->eval();
+    }
+}
+
+op opmap(const char ch) {
+    switch(ch) {
+	case '+':
+	    std::cout << "opmap -> function 'add' found for " << ch << "\n";
+	    return (*add);
+
+	default:
+	    return (nullptr);
+    }
+}
 
 #endif

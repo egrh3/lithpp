@@ -3,7 +3,6 @@
 #include <cstdlib>
 
 #include "token.hpp"
-#include "operations.hpp"
 
 // for prototyping, assume C. should probably pull in from ENV
 std::locale filter("C");
@@ -111,6 +110,8 @@ int parse(std::string tupin, std::vector<node*>* chain) {
 		    std::cout << "LITHP :: parse --> operator? ";
 		    if (knownop(ch)) {
 			std::cout << "valid\n";
+			// only allows single character operations
+			expr->setop(opmap(ch));
 
 			tks++;
 		    } else {
@@ -157,6 +158,11 @@ int parse(std::string tupin, std::vector<node*>* chain) {
 		    return(-idx);
 		}
 	}
+    }
+
+    if (!expr->full()) {
+	std::cerr << "LITHP :: parse --> incomplete expression. no currying.\n";
+	return(-idx);
     }
 
     if (!expr->is_closed()) {

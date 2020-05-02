@@ -40,4 +40,16 @@ void evaluate(std::vector<node*>* chain) {
     }
 }
 
+typedef token (*op)(token, token);
+
+op opmap(const char ch) {
+    switch(ch) {
+	case '+':
+	    return (*add);
+
+	default:
+	    return (nullptr);
+    }
+}
+
 #endif
